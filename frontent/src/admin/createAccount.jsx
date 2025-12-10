@@ -9,25 +9,55 @@ import {
   Stack,
   Link as MuiLink,
 } from "@mui/material";
+import Alert from "@mui/material/Alert";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const CreateAccount = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passkey, setPasskey] = useState(0);
+  const [success, setSuccess] = useState(false);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log({ name, email, password,passkey });
-    // later: call your API here
+    console.log({ name, email, password, passkey });
+    console.log(name, email, password, passkey);
+    const response = await axios
+      .post("http://localhost:3000/admin/create", {
+        name,
+        email,
+        password,
+        passkey,
+      })
+      .then((res) => {
+        console.log("response fetch successfully");
+        return res;
+      })
+      .catch((err) => {
+        console.error("Error sending data to backend", err);
+      });
+    console.log(response);
+
+    if (response && response.data.success) {
+      navigate("/UserHomePage");
+      setSuccess(true);
+      setName("");
+      setEmail("");
+      setPassword("");
+      setPasskey("");
+    }
   };
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        bgcolor: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%)",
+        bgcolor:
+          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -54,6 +84,7 @@ const CreateAccount = () => {
               <Typography variant="body1" color="text.secondary">
                 Create your admin account to manage the movie application.
               </Typography>
+              {success && <Alert severity="success">Account created 🎉</Alert>}
             </Box>
 
             {/* Form */}

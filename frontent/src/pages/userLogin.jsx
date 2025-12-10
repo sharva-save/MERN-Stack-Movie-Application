@@ -10,14 +10,36 @@ import {
   Link as MuiLink,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import Alert from '@mui/material/Alert';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const UserLogin = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [success ,setSuccess] = useState(false)
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     console.log(email, password);
+     const response = await axios
+      .post("http://localhost:3000/user/login", { email, password })
+      .then((res) => {
+        console.log("response fetch successfully");
+        return res;
+      })
+      .catch((err) => {
+        console.error("Error sending data to backend", err);
+      });
+    console.log(response);
+
+    if(response && response.data.success){
+      navigate("/UserHomePage");
+      setEmail("");
+      setSuccess(true)
+      setPassword("");
+    }
   };
 
   return (
@@ -50,6 +72,9 @@ const UserLogin = () => {
               <Typography variant="body1" color="text.secondary">
                 Login to continue watching and managing your favourite movies.
               </Typography>
+              {success &&(<Alert  severity="success" sx={{mt:2}}>
+      Logged in successfully 🎉
+    </Alert>)}
             </Box>
 
             <Box component="form" onSubmit={onSubmit}>

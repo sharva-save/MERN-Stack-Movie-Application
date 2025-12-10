@@ -9,18 +9,52 @@ import {
   Stack,
   Link as MuiLink,
 } from "@mui/material";
+import Alert from "@mui/material/Alert";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
+import axios from "axios";
 
 const CreateAccount = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passkey, setPasskey] = useState();
+  const [success, setSuccess] = useState(false);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log(name, email, password);
-    // later: hit your signup API here
+    console.log(name, email, password, passkey);
+    const response = await axios
+      .post("http://localhost:3000/user/create", {
+        name,
+        email,
+        password,
+        passkey,
+      })
+      .then((res) => {
+        console.log("response fetch successfully");
+        return res;
+      })
+      .catch((err) => {
+        console.error("Error sending data to backend", err);
+      });
+    console.log(response);
+
+    if (response && response.data.success) {
+      setSuccess(true);
+      setName("");
+      setEmail("");
+      setPassword("");
+      setPasskey("");
+
+      setTimeout(() => {
+        setSuccess(false);
+        navigate("/userLogin");
+      }, 2000);
+    }
   };
 
   return (
@@ -52,10 +86,12 @@ const CreateAccount = () => {
               <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
                 Welcome
               </Typography>
+
               <Typography variant="body1" color="text.secondary">
                 Create your account to start exploring movies and managing your
                 favourites.
               </Typography>
+              {success && <Alert severity="success">Account created 🎉</Alert>}
             </Box>
 
             {/* Form */}

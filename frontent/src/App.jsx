@@ -6,6 +6,8 @@ import CreateAccount from "./user/createAccount";
 import CreateAdminAccount from './admin/createAccount'
 import ForgetPassword from './pages/forget'
 import UserHomePage from './user/UserHomePage'
+import UserSearchPage from './user/UserSearchPage'
+import AddMovie from './admin/addMovie'
 
 import { Route, Routes } from 'react-router-dom'
 function App() {
@@ -20,6 +22,8 @@ function App() {
       <Route path="/createAdminAccount" element={<CreateAdminAccount/>} />
       <Route path="/forgetPassword" element={<ForgetPassword/>} />
       <Route path="/UserHomePage" element={<UserHomePage/>} />
+      <Route path="/UserSearchPage" element={<UserSearchPage/>} />
+      <Route path="/addmovie" element={<AddMovie/>} />
     
      </Routes>
     </div>

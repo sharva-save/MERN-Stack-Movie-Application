@@ -1,5 +1,5 @@
-
-import React, { useState, useMemo } from "react";
+// pages/UserSearchPage.jsx
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Container,
@@ -9,30 +9,56 @@ import {
   Pagination,
 } from "@mui/material";
 import MovieCard from "../user/MovieCard";
-import { moviesMock } from "../data/moviesMock";
 
 const ITEMS_PER_PAGE = 10;
 
 const UserSearchPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // fetch movies once
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:3000/movie/getallmovie");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const body = await res.json();
+        const arr = Array.isArray(body) ? body : body.data || [];
+        setMovies(arr);
+      } catch (err) {
+        console.error("Failed to load movies:", err);
+        setMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, []);
+
+  // filter using the live movies array (safe access if description missing)
   const filteredMovies = useMemo(() => {
-    const term = search.toLowerCase();
-    if (!term) return moviesMock;
-    return moviesMock.filter(
-      (m) =>
-        m.title.toLowerCase().includes(term) ||
-        m.description.toLowerCase().includes(term)
-    );
-  }, [search]);
+    const term = (search || "").toLowerCase().trim();
+    if (!term) return movies;
+    return movies.filter((m) => {
+      const title = (m.title || "").toLowerCase();
+      const desc = (m.description || "").toLowerCase();
+      return title.includes(term) || desc.includes(term);
+    });
+  }, [search, movies]);
 
-  const totalPages = Math.ceil(filteredMovies.length / ITEMS_PER_PAGE) || 1;
+  // ensure at least 1 page so Pagination always renders
+  const totalPages = Math.max(1, Math.ceil(filteredMovies.length / ITEMS_PER_PAGE));
   const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const paginatedMovies = filteredMovies.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  const paginatedMovies = filteredMovies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // keep page in range when filteredMovies changes
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredMovies.length / ITEMS_PER_PAGE));
+    if (page > pages) setPage(1);
+  }, [filteredMovies, page]);
 
   return (
     <Box
@@ -61,7 +87,7 @@ const UserSearchPage = () => {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1);
+              setPage(1); // reset to first page on new search
             }}
             sx={{
               bgcolor: "white",
@@ -75,14 +101,22 @@ const UserSearchPage = () => {
 
         {/* Results count */}
         <Typography variant="body2" sx={{ mb: 1 }}>
-          {filteredMovies.length} result(s) found
+          {loading ? "Loading..." : `${filteredMovies.length} result(s) found`}
         </Typography>
 
         {/* Movie list */}
         <Box sx={{ mb: 3 }}>
-          {paginatedMovies.map((movie, idx) => (
-            <MovieCard key={movie.id} movie={movie} index={startIndex + idx} />
-          ))}
+          {loading ? (
+            <Typography>Loading movies...</Typography>
+          ) : paginatedMovies.length === 0 ? (
+            <Typography>No movies found</Typography>
+          ) : (
+            paginatedMovies.map((movie, idx) => {
+              // use stable unique key (_id from Mongo) or fallback to composite
+              const key = movie._id || `${movie.rank || idx}-${movie.title || idx}-${movie.year || ""}`;
+              return <MovieCard key={key} movie={movie} index={startIndex + idx} />;
+            })
+          )}
         </Box>
 
         {/* Pagination */}
@@ -93,6 +127,11 @@ const UserSearchPage = () => {
             onChange={(_, value) => setPage(value)}
             shape="rounded"
             color="primary"
+            sx={{
+              ".MuiPaginationItem-root": { color: "rgba(255,255,255,0.95)" },
+              ".MuiPaginationItem-root.Mui-selected": { backgroundColor: "#1976d2" },
+              ".MuiPagination-ul": { justifyContent: "center" },
+            }}
           />
         </Stack>
       </Container>

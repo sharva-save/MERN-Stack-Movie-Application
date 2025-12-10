@@ -12,7 +12,6 @@ import {
   IconButton,
 } from "@mui/material";
 
-import AddIcon from "@mui/icons-material/Add";
 
 const 
 MovieCard = ({ movie, index }) => {
@@ -41,7 +40,7 @@ MovieCard = ({ movie, index }) => {
       >
         <CardMedia
           component="img"
-          image={movie.poster}
+          image={movie.photo}
           alt={movie.title}
           sx={{ height: "100%", objectFit: "cover" }}
         />
@@ -56,7 +55,7 @@ MovieCard = ({ movie, index }) => {
             ":hover": { bgcolor: "rgba(0,0,0,0.8)" },
           }}
         >
-          <AddIcon fontSize="small" />
+          {/* <AddIcon fontSize="small" /> */}
         </IconButton>
 
         <Chip
